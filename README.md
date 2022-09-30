@@ -90,6 +90,7 @@ To start with please review CreateFeatureVectors1.java.  This implementation is 
      javaVector_train.libsvm
 
 *Question 1:* What percentage of input lines end up in the vector train and eval files?
+* **15% in the eval, 85% in the train**
 
 
 ### B. Training a model
@@ -100,7 +101,10 @@ We want to train our first model and assess the accuracy of the model against th
 Notice we are loading the feature_names, and then the train and eval vector files.  Now would be a good time to review the [xgboost train API documentation](https://xgboost.readthedocs.io/en/latest/python/python_api.html#module-xgboost.training).  Notice that the classifier output from train is used to predict against the test set.  The predictions are then labeled depending on their output probability, and the false-positives and false-negatives are computed by comparing those labels with the input labels.
 
 *Question 2:* What is the accuracy of your model and how is accuracy computed?
-
+* **Accuracy: 77.25%. The accuracy is computed by:**
+  * Using the model to predict on the test set
+  * rounding the predictions to either 1 or 0 around a threshold of 0.5
+  * taking the percentage of those threshold predictions which match the expected outcome.
 
 ### C. Building and refining features
 We really need to understand the data we are trying to represent to the machine to build the best model.  In looking at this data sample how can we better compare the target and sample?
@@ -120,10 +124,13 @@ What if instead of comparing whole name strings, we looked for the number of nam
      Run the CreateFeatureVectors2.java file.
 
 *Question 3:* How did the output vectors change?
+* **Now, the vectors contain 0, 1, and 2, where before, they only contained 0 or 1.**
+
 
      Train the model with the new vectors.
 
 *Question 4:* What was the accuracy with the improved name comparison?
+* **82%**
 
 Consider these questions:
 * Remember we just compared all fields exactly. What could we do better when representing the data to the classifier?
@@ -136,10 +143,15 @@ So far we have made a few observations. Simply comparing name strings doesn't be
      Uncomment the differentNames else clause in CreateFeatureVectors2.java
 
 *Question 5:* What will happen with the differentNames clause uncommented?
+* **If none of the names was the same, then instead of 0, the name feature will be negative. This will distinguish a complete name mismatch from the case where the name is not to be used.**
+
 
      Create the new vectors and train the model.
 
 *Question 6:* Was the accuracy improved?  How much?  How is this implementation flawed?
+* **The new accuracy is 84.5%, which is 2.5% higher than before.**
+* The implementation is flawed in that it is still comparing the names exactly, and name variations are not accounted for. What about `John` vs. `Jonathan`?
+* Another flaw is that each name part is compared to each other name part, and whenever they don't match, the `differentNames` variable is decremented. This means that if both sides of the comparison have 3 name parts, and neither of them match, the `differentNames` variable will show that `9` names are different between the two.
 
 Next consider the dates in the input data.  Close inspection will show that often birth dates are estimates, based on age declared at the time the record is made.  So we need to come up with a way to represent year alignment that is close - and let the machine learn which cases it should pay attention to that.  We have already called out the date fields in CreateFeatureVectors2.java (DATE_FIELDS = {10, 24, 38, 66}).
 
@@ -148,10 +160,25 @@ Next consider the dates in the input data.  Close inspection will show that ofte
 Remember that 0 is the default value, and means no data.  So how will we represent year alignment, and the differences?
 
 *Question 7:* What value will the date fields contain if the year differs by 1?  What about if they differ by 2, or 5?
+* **This section of the code gives a score for dates that are within 4 years of eachother.**
+* Years that are equal will be given a score of 5. Off by 1 gets score 4. Off by 2 => 3, 3 => 2, 4 => 1, and anything greater than 4 gets a zero score. This means that if the years are off by more than 4, the model should regard the year score as having no data.
+
 
      Run CreateFeatureVectors2.java after uncommenting the code that compares the years into buckets and train a new model.
 
 *Question 8:* What is the accuracy now?  How could you improve this bucketing?
+* **The new accuracy is 85%.** One obvious way to improve this bucketing would be to allow the scores to encompass a greater range of dates. Perhaps a score scale like this:
+
+| Year Difference | Score |
+|-----------------|-------|
+| <5              | 5     |
+| <10             | 4     |
+| <20             | 3     |
+| <40             | 2     |
+| <80             | 1     |
+| \>=80           | 0     |
+
+* Another way this could be improved would be to include a negative score for year differences that are very large, so that those get penalized instead of just ignored.
 
 
 ### D. Analyzing the model
@@ -164,8 +191,10 @@ To start with you can see we will graph the accuracy at each training iteration.
 The train.py script will present a number of graphs: Error rates for each iteration, Logloss for each training iteration, Precision/Recall curve for your model, feature importance for your model, and the decision tree from your model's first iteration.  (Note: You can close each graph as it pops up, and the next graph will appear.  If you are using Windows and WSL the graphs will be created in your artifacts directory.)  Please review each graph and spend some time on the feature importance, and tree plot graphs.
 
 *Question 9:* What are the three most important features of your model?
+* **Birth Year, Spouse Name and Person Name, in that order**
 
 *Question 10:* Where in the first decision tree plot do you expect your most important feature to be?  Where is it actually, and why?
+* **I would've expected it to be near the top, to give the decision more weight, but it is actually towards the bottom, right next to the leaves. Perhaps this is because the important features are given the final determining say after the less important features have been taken into account? I'm not entirely sure on this one.**
 
 Note: You can modify the 'num_trees' argument in xgb.plot_tree to see the decision tree plot for other iterations.  This gives you some idea of what is happening with each new iteration.  The classifier runs over all the decision trees by default - but you can run it only up to any number of trees in your saved model with additional parameters.
 
@@ -178,6 +207,8 @@ Xgboost has an [early stopping rounds](https://xgboost.readthedocs.io/en/latest/
      Find the 'early_stopping_rounds' line in train.py, and exchange that line for the one above it.  Try your training again.
 
 *Question 11:* What iteration did your model stop on?  Was your accuracy improved?
+* **It stopped aftr about 350 iterations instead of 1000. The accuracy stayed at 85%.**
+
 
 The Precision/Recall graph shows the tension between getting all the answers right, and getting answers for all the questions.  You can find an optimal point on the curve where you maximize precision or recall, or maybe you want to balance them.  Then you can find on that curve what the precision threshold is at that point.  If you are interested in pursuing threshold analysis you can look into the data behind the P/R curve.
 

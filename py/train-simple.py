@@ -6,11 +6,11 @@ import numpy as np
 from sklearn.metrics import accuracy_score
 
 # load the feature names
-with open("data/features.txt", "r") as f:
+with open("../data/features.txt", "r") as f:
   feature_names = f.read().split("\n")[:-1]
 
-train = xgb.DMatrix('data/javaVector_train.libsvm', feature_names=feature_names)
-test = xgb.DMatrix('data/javaVector_eval.libsvm', feature_names=feature_names)
+train = xgb.DMatrix('../data/javaVector_train.libsvm', feature_names=feature_names)
+test = xgb.DMatrix('../data/javaVector_eval.libsvm', feature_names=feature_names)
 
 eval_metrics = ['error', 'logloss']
 num_boost_rounds = 1000
@@ -26,16 +26,18 @@ params = {'n_jobs': 4,
 
 results = {}
 watchlist = [(train, 'train'), (test, 'test')]
-clf = xgb.train(params, train, num_boost_rounds, watchlist, evals_result = results, verbose_eval=100)
 
-print("Calculating predictions")
-predictions = clf.predict(test)
-predict_labels = np.array([1 if x >= 0.5 else 0 for x in predictions])
-labels = test.get_label()
+if __name__ == '__main__':
+    clf = xgb.train(params, train, num_boost_rounds, watchlist, evals_result = results, verbose_eval=100)
 
-fp = sum((predictions >= 0.5) & (labels < 1)) # false positives
-fn = sum((predictions < 0.5) & (labels > 0)) # false negatives
-print(f"{fp} false positives, {fn} false negatives")
+    print("Calculating predictions")
+    predictions = clf.predict(test)
+    predict_labels = np.array([1 if x >= 0.5 else 0 for x in predictions])
+    labels = test.get_label()
 
-accuracy = accuracy_score(labels, predict_labels)
-print("Accuracy: %.2f%%" % (accuracy * 100.0))
+    fp = sum((predictions >= 0.5) & (labels < 1)) # false positives
+    fn = sum((predictions < 0.5) & (labels > 0)) # false negatives
+    print(f"{fp} false positives, {fn} false negatives")
+
+    accuracy = accuracy_score(labels, predict_labels)
+    print("Accuracy: %.2f%%" % (accuracy * 100.0))
