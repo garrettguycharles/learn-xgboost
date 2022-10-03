@@ -274,7 +274,7 @@ We only scratched the surface of feature development and fitting those features 
      The final activity is to develop a feature or find another way to improve the accuracy of our example code.
 
 *Question 15:* What feature did you develop or optimize?  How much did it help improve your model?
-* I added more meaning to the features which compared strings. I allowed the existing metric which counted the number of tokens which matched exactly in the string, but I added on a measure of the edit distance between the two strings. This allowed for a bit more nuance when names were close, but didn't match exactly.
+* I added more meaning to the features which compared strings. I kept the existing metric which counted the number of tokens which matched exactly in the string, but I added on a measure of the edit distance between the two strings. This allowed for a bit more nuance when names were close, but didn't match exactly. I also played with the `max_depth` until I found an optimum at 17.
 * **This improved the accuracy to 89%, an increase of 1.75%**
 
 In summary:
