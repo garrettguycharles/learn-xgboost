@@ -55,7 +55,12 @@ public class CreateFeatureVectors2 {
               }
             }
           }
-          vectorValues.add(String.valueOf(sameNames > 0 ? sameNames : differentNames));
+          int featureValue = sameNames > 0 ? sameNames : differentNames;
+          // give the sameNames or differentNames a weight of 5
+          featureValue *= 5;
+          // add in the granular edit-distance comparison
+          featureValue += Utils.editDistanceScore(candidateField, targetField, 20) - 10; // < make the edit-distance buckets zero-centric
+          vectorValues.add(String.valueOf(featureValue));
         }
         else if (dateFields.contains(i)) {
           try {

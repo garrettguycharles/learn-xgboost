@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
     params = {'n_jobs': 4,
               'eta': 0.1,
-              'max_depth': 4,
+              'max_depth': 17,
               'gamma': 0,
               'subsample': 1,
               'colsample_bytree': 1,

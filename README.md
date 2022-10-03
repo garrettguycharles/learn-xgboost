@@ -207,7 +207,7 @@ Xgboost has an [early stopping rounds](https://xgboost.readthedocs.io/en/latest/
      Find the 'early_stopping_rounds' line in train.py, and exchange that line for the one above it.  Try your training again.
 
 *Question 11:* What iteration did your model stop on?  Was your accuracy improved?
-* **It stopped aftr about 350 iterations instead of 1000. The accuracy stayed at 85%.**
+* **It stopped after about 350 iterations instead of 1000. The accuracy stayed at 85%.**
 
 
 The Precision/Recall graph shows the tension between getting all the answers right, and getting answers for all the questions.  You can find an optimal point on the curve where you maximize precision or recall, or maybe you want to balance them.  Then you can find on that curve what the precision threshold is at that point.  If you are interested in pursuing threshold analysis you can look into the data behind the P/R curve.
@@ -246,10 +246,13 @@ We are going to experiment with the max_depth option.  This controls the depth o
      Change the max_depth from 4 to 6.  Retrain and analyze your model.
 
 *Question 12:* How is your accuracy and tree impacted by this change?
+* **Now, the accuracy is 86.25%, an increase of 1.25%.**
+
 
      Try adjusting max_depth some more.
 
 *Question 13:* How is your accuracy and tree impacted by this change?  Did you find an optimal max_depth?
+* **I tried depths all the way up to 16, and the optimal max_depth for me was 8, which yielded an accuracy of 87.25%.**
 
 
 ### F. Building your data-science superpowers
@@ -262,6 +265,7 @@ Notice the train.py code we log parameters, metrics and artifacts to mlflow.  Th
 This will startup a local mlflow UI at http://127.0.0.1:5000 that you can open in your browser.  Select the `matching` experiment in the left pane if it isn't already selected.  Type `max_depth` in the box labeled 'Filter Params:' and `accuracy` in the box labeled 'Filter Metrics:'.  Click 'Search'.  You should see each of your training runs, and the parameters and metrics recorded.  Select a few runs and click 'Compare' - notice how the feature importance changed between runs.  Return to the list of runs and click on one - scroll down to the artifacts area and notice you can click on the .png artifacts to display the graphs.
 
 *Question 14:* What might be useful here in comparing training runs?
+* **The scatter plot was very visually useful for finding the max accuracy. I can see this being incredibly useful when searching the hyperparameter space for optimum settings. If we set up a script to train on a handful of combinations of settings (max_depth, etc), then we could use MLFlow to analyze which combinations produced the best results, and then we wouldn't have to do so much by hand.**
 
 
 ### G. Choose your own adventure
@@ -270,6 +274,8 @@ We only scratched the surface of feature development and fitting those features 
      The final activity is to develop a feature or find another way to improve the accuracy of our example code.
 
 *Question 15:* What feature did you develop or optimize?  How much did it help improve your model?
+* I added more meaning to the features which compared strings. I allowed the existing metric which counted the number of tokens which matched exactly in the string, but I added on a measure of the edit distance between the two strings. This allowed for a bit more nuance when names were close, but didn't match exactly.
+* **This improved the accuracy to 89%, an increase of 1.75%**
 
 In summary:
 * Getting good labeled data to represent your problem is often the hardest thing
